@@ -24,17 +24,15 @@ jobs:
       run: |
         sudo apt-get install -y gcc-multilib g++-multilib
         wget https://github.com/lordmilko/i686-elf-tools/releases/download/7.1.0/i686-elf-tools-linux.zip
-        unzip i686-elf-tools-linux.zip
-        ls -la i686-elf-tools-linux/bin/
-        echo "$GITHUB_WORKSPACE/i686-elf-tools-linux/bin" >> $GITHUB_PATH
+        unzip i686-elf-tools-linux.zip -d i686-elf-tools
+        ls -la i686-elf-tools/
+        ls -la i686-elf-tools/bin/ || echo "No bin directory found"
+        echo "$GITHUB_WORKSPACE/i686-elf-tools/bin" >> $GITHUB_PATH
     
     - name: Verify cross-compiler installation
       run: |
-        echo "PATH is: $PATH"
-        which i686-elf-gcc || echo "i686-elf-gcc not found in PATH"
-        ls -la $GITHUB_WORKSPACE/i686-elf-tools-linux/bin/ || echo "Directory not found"
-        $GITHUB_WORKSPACE/i686-elf-tools-linux/bin/i686-elf-gcc --version
-        $GITHUB_WORKSPACE/i686-elf-tools-linux/bin/i686-elf-ld --version
+        i686-elf-gcc --version
+        i686-elf-ld --version
     
     - name: Build OrangeOS
       run: |
