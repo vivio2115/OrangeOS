@@ -23,10 +23,8 @@ jobs:
     - name: Install i686-elf cross-compiler
       run: |
         sudo apt-get install -y gcc-multilib g++-multilib
-        # Download pre-built cross-compiler
         wget https://github.com/lordmilko/i686-elf-tools/releases/download/7.1.0/i686-elf-tools-linux.zip
         unzip i686-elf-tools-linux.zip
-        # Add to PATH for this step and subsequent steps
         echo "$GITHUB_WORKSPACE/i686-elf-tools-linux/bin" >> $GITHUB_PATH
     
     - name: Verify cross-compiler installation
