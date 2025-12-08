@@ -42,7 +42,10 @@ STAGE2_BIN = stage2.bin
 KERNEL_BIN = kernel.bin
 OS_IMAGE = orangeos.img
 
-all: $(OS_IMAGE)
+all: generate_version $(OS_IMAGE)
+
+generate_version:
+	@bash scripts/increment_build.sh
 
 PART_IMG = partition.img
 MBR_TEMP = mbr_temp.bin
@@ -119,7 +122,7 @@ clean:
 	rm -f kernel.elf $(OS_IMAGE) $(PART_IMG) $(MBR_TEMP)
 
 run: $(OS_IMAGE)
-	qemu-system-i386 -drive format=raw,file=$(OS_IMAGE),if=ide,index=0,media=disk -m 32M -boot c -no-acpi -no-reboot
+	qemu-system-i386 -drive format=raw,file=$(OS_IMAGE),if=ide,index=0,media=disk -m 32M -boot c -no-acpi
 
 debug: $(OS_IMAGE)
 	qemu-system-i386 -drive format=raw,file=$(OS_IMAGE),if=ide,index=0,media=disk -m 32M -boot c -no-acpi -s -S

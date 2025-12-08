@@ -40,7 +40,7 @@ void idt_set_gate(uint8_t num, uint32_t base, uint16_t selector, uint8_t flags) 
 }
 
 
-void idt_init() {
+bool idt_init() {
     idt_pointer.limit = sizeof(struct idt_entry) * 256 - 1;
     idt_pointer.base = (uint32_t)&idt_entries;
 
@@ -88,6 +88,8 @@ void idt_init() {
 
     
     idt_flush((uint32_t)&idt_pointer);
+    
+    return true;
 }
 
 

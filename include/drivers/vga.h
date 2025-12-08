@@ -17,7 +17,7 @@ enum vga_color {
     VGA_COLOR_CYAN = 3,
     VGA_COLOR_RED = 4,
     VGA_COLOR_MAGENTA = 5,
-    VGA_COLOR_BROWN = 6,
+        VGA_COLOR_ORANGE = 6,          // orange
     VGA_COLOR_LIGHT_GREY = 7,
     VGA_COLOR_DARK_GREY = 8,
     VGA_COLOR_LIGHT_BLUE = 9,
@@ -37,5 +37,9 @@ void vga_write(const char* str);
 void vga_writeln(const char* str);
 void vga_set_color(uint8_t fg, uint8_t bg);
 void vga_scroll();
+void vga_write_at(const char* str, uint8_t x, uint8_t y);
+void vga_set_cursor(uint8_t x, uint8_t y);
+void vga_set_palette_color(uint8_t index, uint8_t r, uint8_t g, uint8_t b);
+void vga_init_custom_palette();
 
 #endif 

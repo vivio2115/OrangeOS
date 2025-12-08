@@ -4,6 +4,7 @@
 #include <kernel/editor.h>
 #include <kernel/paging.h>
 #include <drivers/vga.h>
+#include <kernel/version.h>
 #include <drivers/keyboard.h>
 #include <drivers/timer.h>
 #include <drivers/fat32.h>
@@ -20,35 +21,49 @@ void shell_init() {
 
 
 void shell_prompt() {
-    vga_set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
+    vga_set_color(VGA_COLOR_ORANGE, VGA_COLOR_BLACK);
     vga_write("OrangeOS");
     vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
     vga_write("> ");
 }
 
 
-void cmd_help() {
-    vga_writeln("Available commands:");
-    vga_writeln("  help     - Show this help message");
-    vga_writeln("  clear    - Clear the screen");
-    vga_writeln("  echo     - Echo text to screen");
-    vga_writeln("  info     - Show system information");
-    vga_writeln("  testheap - Test heap allocation");
-    vga_writeln("  meminfo  - Show memory information");
-    vga_writeln("  time     - Show system uptime");
-    vga_writeln("  reboot   - Reboot the system");
-    vga_writeln("  halt     - Halt the system");
-    vga_writeln("  ls       - List directory");
-    vga_writeln("  cat      - Display file contents");
-    vga_writeln("  load     - Load file to memory");
-    vga_writeln("  vi       - Edit file (vi-like editor)");
-    vga_writeln("  fat32debug - Debug FAT32 file system");
-    vga_writeln("  mkdir    - Create directory");
-    vga_writeln("  cd       - Change directory");
-    vga_writeln("  pwd      - Print working directory");
-    vga_writeln("  rm       - Delete file");
-    vga_writeln("  paginginfo - Show paging statistics");
-    vga_writeln("  testpaging - Test paging functionality");
+void cmd_help(const char* args) {
+    bool dev_mode = false;
+    
+    if (args && args[0] != '\0') {
+        if (strcmp(args, "--dev") == 0) {
+            dev_mode = true;
+        }
+    }
+    
+    if (dev_mode) {
+        vga_writeln("Developer commands:");
+        vga_writeln("  testheap   - Test heap allocation");
+        vga_writeln("  testpaging - Test paging functionality");
+        vga_writeln("  fat32debug - Debug FAT32 file system");
+        vga_writeln("  paginginfo - Show paging statistics");
+        vga_writeln("  load       - Load file to memory");
+    } else {
+        vga_writeln("Available commands:");
+        vga_writeln("  help     - Show this help message");
+        vga_writeln("  clear    - Clear the screen");
+        vga_writeln("  echo     - Echo text to screen");
+        vga_writeln("  info     - Show system information");
+        vga_writeln("  meminfo  - Show memory information");
+        vga_writeln("  time     - Show system uptime");
+        vga_writeln("  ls       - List directory");
+        vga_writeln("  cat      - Display file contents");
+        vga_writeln("  vi       - Edit file (vi-like editor)");
+        vga_writeln("  mkdir    - Create directory");
+        vga_writeln("  cd       - Change directory");
+        vga_writeln("  pwd      - Print working directory");
+        vga_writeln("  rm       - Delete file");
+        vga_writeln("  reboot   - Reboot the system");
+        vga_writeln("  halt     - Halt the system");
+        vga_writeln("");
+        vga_writeln("Type 'help --dev' for developer commands");
+    }
 }
 
 
@@ -63,14 +78,19 @@ void cmd_echo(const char* args) {
 
 
 void cmd_info() {
-    vga_set_color(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK);
-    vga_write(ORANGEOS_NAME);
-    vga_write(" v");
-    vga_writeln(ORANGEOS_VERSION);
+    vga_set_color(VGA_COLOR_ORANGE, VGA_COLOR_BLACK);
+    vga_writeln(OS_VERSION_STRING);
     vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
-    vga_writeln("A simple operating system written in C++ and Assembly");
-    vga_writeln("Architecture: x86 (32-bit)");
-    vga_writeln("Bootloader: OrangeBoot");
+    vga_writeln("");
+    vga_writeln("A simple x86 operating system");
+    vga_writeln("Written in C++ and Assembly");
+    vga_writeln("");
+    vga_writeln("File System: FAT32");
+    vga_writeln("Bootloader: Custom MBR");
+    vga_writeln("");
+    vga_set_color(VGA_COLOR_ORANGE, VGA_COLOR_BLACK);
+    vga_writeln("Named after my orange cat!");
+    vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
 }
 
 
@@ -579,7 +599,7 @@ void shell_execute(const char* command) {
 
     
     if (strcmp(cmd, "help") == 0) {
-        cmd_help();
+        cmd_help(args);
     } else if (strcmp(cmd, "clear") == 0) {
         cmd_clear();
     } else if (strcmp(cmd, "echo") == 0) {

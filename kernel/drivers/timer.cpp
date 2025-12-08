@@ -6,7 +6,11 @@
 static uint32_t timer_ticks = 0;
 
 
-void timer_init(uint32_t frequency) {
+bool timer_init(uint32_t frequency) {
+    if (frequency == 0 || frequency > PIT_FREQUENCY) {
+        return false;
+    }
+    
     
     uint32_t divisor = PIT_FREQUENCY / frequency;
     
@@ -23,6 +27,8 @@ void timer_init(uint32_t frequency) {
     
     
     timer_ticks = 0;
+    
+    return true;
 }
 
 

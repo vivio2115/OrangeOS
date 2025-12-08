@@ -23,9 +23,10 @@ static int buffer_read_pos = 0;
 static int buffer_write_pos = 0;
 
 
-void keyboard_init() {
+bool keyboard_init() {
     buffer_read_pos = 0;
     buffer_write_pos = 0;
+    return true;
 }
 
 

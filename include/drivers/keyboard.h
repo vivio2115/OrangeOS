@@ -10,7 +10,7 @@
 #define KEYBOARD_BUFFER_SIZE 256
 
 
-void keyboard_init();
+bool keyboard_init();
 char keyboard_getchar();
 bool keyboard_has_input();
 char keyboard_peek(); 

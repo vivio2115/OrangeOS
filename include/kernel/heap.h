@@ -20,7 +20,7 @@ struct heap_stats {
 };
 
 
-void kheap_init(void* start_addr, size_t size);
+bool kheap_init(void* start_addr, size_t size);
 void* kmalloc(size_t size);
 void kfree(void* ptr);
 void kheap_get_stats(struct heap_stats* stats);

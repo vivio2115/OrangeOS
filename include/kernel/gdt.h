@@ -21,7 +21,7 @@ struct gdt_ptr {
 } __attribute__((packed));
 
 
-void gdt_init();
+bool gdt_init();
 void gdt_set_gate(int num, uint32_t base, uint32_t limit, uint8_t access, uint8_t gran);
 
 

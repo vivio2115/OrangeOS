@@ -26,7 +26,7 @@ extern "C" void outw(uint16_t port, uint16_t value);
 extern "C" uint16_t inw(uint16_t port);
 
 
-void idt_init();
+bool idt_init();
 void idt_set_gate(uint8_t num, uint32_t base, uint16_t selector, uint8_t flags);
 
 

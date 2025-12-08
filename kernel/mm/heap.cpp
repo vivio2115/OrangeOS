@@ -4,12 +4,18 @@
 static struct heap_block* heap_start = NULL;
 static size_t heap_total_size = 0;
 
-void kheap_init(void* start_addr, size_t size) {
+bool kheap_init(void* start_addr, size_t size) {
+    if (start_addr == NULL || size < sizeof(struct heap_block) * 2) {
+        return false;
+    }
+    
     heap_start = (struct heap_block*)start_addr;
     heap_start->size = size - sizeof(struct heap_block);
     heap_start->free = true;
     heap_start->next = NULL;
     heap_total_size = size;
+    
+    return true;
 }
 
 void* kmalloc(size_t size) {

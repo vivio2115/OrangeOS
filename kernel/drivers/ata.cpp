@@ -35,7 +35,7 @@ static bool ata_wait_data() {
 }
 
 
-void ata_init() {
+bool ata_init() {
     
     
     outb(ATA_DEVICE, 0xE0 | (0 << 4)); 
@@ -48,7 +48,7 @@ void ata_init() {
     if (status == 0xFF || status == 0x00) {
         
         
-        return;
+        return false;
     }
     
     
@@ -59,6 +59,8 @@ void ata_init() {
         }
         for (volatile int j = 0; j < 1000; j++); 
     }
+    
+    return true;
 }
 
 

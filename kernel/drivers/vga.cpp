@@ -46,6 +46,8 @@ void vga_init() {
     vga_color_attr = vga_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
     vga_clear();
     vga_update_cursor(0, 0);
+    
+    vga_init_custom_palette();
 }
 
 
@@ -128,4 +130,44 @@ void vga_write(const char* str) {
 void vga_writeln(const char* str) {
     vga_write(str);
     vga_putchar('\n');
+}
+
+
+void vga_write_at(const char* str, uint8_t x, uint8_t y) {
+    if (y >= VGA_HEIGHT) return;
+    
+    uint8_t saved_row = vga_row;
+    uint8_t saved_col = vga_col;
+    
+    vga_row = y;
+    vga_col = x;
+    
+    for (size_t i = 0; str[i] != '\0' && vga_col < VGA_WIDTH; i++) {
+        if (str[i] == '\n') break;
+        vga_buffer[vga_row * VGA_WIDTH + vga_col] = vga_entry(str[i], vga_color_attr);
+        vga_col++;
+    }
+    
+    vga_row = saved_row;
+    vga_col = saved_col;
+}
+
+
+void vga_set_cursor(uint8_t x, uint8_t y) {
+    vga_col = x;
+    vga_row = y;
+    vga_update_cursor(x, y);
+}
+
+
+void vga_set_palette_color(uint8_t index, uint8_t r, uint8_t g, uint8_t b) {
+    outb(0x3C8, index);        
+    outb(0x3C9, r & 0x3F);    
+    outb(0x3C9, g & 0x3F);    
+    outb(0x3C9, b & 0x3F);     
+}
+
+
+void vga_init_custom_palette() {
+    vga_set_palette_color(6, 63, 32, 0);  
 }

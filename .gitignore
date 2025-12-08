@@ -15,7 +15,6 @@ kernel.bin
 *.swp
 *.swo
 
-scripts/
 .vscode/
 .idea/
 *.code-workspace
@@ -26,3 +25,6 @@ Thumbs.db
 build/
 bin/
 obj/
+
+include/kernel/version_build.h
+.build_number

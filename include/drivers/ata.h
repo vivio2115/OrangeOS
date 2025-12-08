@@ -32,7 +32,7 @@
 #define ATA_SECTOR_SIZE 512
 
 
-void ata_init();
+bool ata_init();
 bool ata_read_sector(uint32_t lba, void* buffer);
 bool ata_write_sector(uint32_t lba, const void* buffer);
 bool ata_read_sectors(uint32_t lba, uint8_t count, void* buffer);

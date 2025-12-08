@@ -14,7 +14,7 @@
 #define PIT_FREQUENCY 1193182
 
 
-void timer_init(uint32_t frequency);
+bool timer_init(uint32_t frequency);
 extern "C" void timer_handler();  
 uint32_t timer_get_ticks();
 void timer_sleep(uint32_t milliseconds);
