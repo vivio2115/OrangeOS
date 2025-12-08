@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: OrangeOS Build
 
 on:
   push:
@@ -12,9 +12,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: make
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y nasm build-essential bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo
+    
+    - name: Install i686-elf cross-compiler
+      run: |
+        sudo apt-get install -y gcc-multilib g++-multilib
+        # Download pre-built cross-compiler or build from source
+        wget https://github.com/lordmilko/i686-elf-tools/releases/download/7.1.0/i686-elf-tools-linux.zip
+        unzip i686-elf-tools-linux.zip
+        echo "$PWD/i686-elf-tools-linux/bin" >> $GITHUB_PATH
+    
+    - name: Build OrangeOS
       run: make
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+    
+    - name: Upload OS image
+      uses: actions/upload-artifact@v4
+      with:
+        name: orangeos-image
+        path: orangeos.img
