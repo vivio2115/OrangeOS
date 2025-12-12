@@ -11,6 +11,8 @@
 ## ITS JUST A DEV DEMO
 
 
+qemu-system-i386 -drive format=raw,file=os-image.bin,if=ide,index=0,media=disk -m 32M -boot c -no-acpi
+
 
 ## License
 
