@@ -118,7 +118,7 @@ static struct page_table_entry* get_page_table_entry(void* virtual_addr, bool cr
         
         pde->present = 1;
         pde->rw = 1;
-        pde->user = 0;  
+        pde->user = 1;  
         pde->frame = addr_to_frame(page_table_frame);
     }
     
@@ -130,7 +130,7 @@ static struct page_table_entry* get_page_table_entry(void* virtual_addr, bool cr
 }
 
 
-void paging_map_page(void* virtual_addr, void* physical_addr, uint32_t flags) {
+void paging_map_page(void* virtual_addr, void* physical_addr, uint32_t flags, bool mark_as_used) {
     struct page_table_entry* pte = get_page_table_entry(virtual_addr, true);
     if (pte == NULL) return;
     
@@ -153,7 +153,7 @@ void paging_map_page(void* virtual_addr, void* physical_addr, uint32_t flags) {
     
     
     uint32_t frame = addr_to_frame(physical_addr);
-    if (!is_frame_used(frame)) {
+    if (mark_as_used && !is_frame_used(frame)) {
         set_frame_bit(frame);
         used_frames++;
     }
@@ -200,7 +200,7 @@ void* paging_create_page_directory() {
 }
 
 
-void paging_identity_map(void* addr, uint32_t size, uint32_t flags) {
+void paging_identity_map(void* addr, uint32_t size, uint32_t flags, bool mark_as_used) {
     uint32_t start_addr = (uint32_t)addr;
     uint32_t end_addr = start_addr + size;
     
@@ -210,7 +210,7 @@ void paging_identity_map(void* addr, uint32_t size, uint32_t flags) {
     
     
     for (uint32_t addr = start_addr; addr < end_addr; addr += PAGE_SIZE) {
-        paging_map_page((void*)addr, (void*)addr, flags);
+        paging_map_page((void*)addr, (void*)addr, flags, mark_as_used);
     }
 }
 
@@ -233,10 +233,13 @@ void paging_init() {
     
     
     
-    paging_identity_map((void*)0x0, 0x400000, PTE_PRESENT | PTE_RW);
+    
+    paging_identity_map((void*)0x0, 0x600000, PTE_PRESENT | PTE_RW, true);
+
     
     
-    paging_identity_map((void*)0x200000, 0x400000, PTE_PRESENT | PTE_RW);
+    
+    paging_identity_map((void*)0x600000, 0x8000000 - 0x600000, PTE_PRESENT | PTE_RW, false);
 }
 
 
@@ -244,6 +247,34 @@ void* paging_get_current_directory() {
     return current_page_directory;
 }
 
+void* paging_clone_kernel_mappings() {
+    void* new_pd = paging_create_page_directory();
+    if (!new_pd) return NULL;
+    
+    struct page_directory_entry* new_dir = (struct page_directory_entry*)new_pd;
+    struct page_directory_entry* kernel_dir = current_page_directory;
+    
+    
+    for (int i = 0; i < 256; i++) {
+        new_dir[i] = kernel_dir[i];
+    }
+    
+    return new_pd;
+}
+
+void paging_switch_directory(void* page_directory) {
+    current_page_directory = (struct page_directory_entry*)page_directory;
+    paging_load_directory(page_directory);
+}
+
+void paging_map_page_in_directory(void* page_directory, void* virtual_addr, void* physical_addr, uint32_t flags, bool mark_as_used) {
+    struct page_directory_entry* old_dir = current_page_directory;
+    current_page_directory = (struct page_directory_entry*)page_directory;
+    
+    paging_map_page(virtual_addr, physical_addr, flags, mark_as_used);
+    
+    current_page_directory = old_dir;
+}
 
 void paging_get_stats(struct paging_stats* stats) {
     if (stats == NULL) return;

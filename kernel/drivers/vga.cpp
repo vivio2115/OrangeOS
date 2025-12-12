@@ -45,6 +45,7 @@ void vga_init() {
     vga_col = 0;
     vga_color_attr = vga_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
     vga_clear();
+    vga_enable_cursor(0, 15); 
     vga_update_cursor(0, 0);
     
     vga_init_custom_palette();

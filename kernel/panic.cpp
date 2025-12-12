@@ -9,7 +9,7 @@ void panic(const char* message) {
     asm volatile("cli");
     
     
-    vga_clear();
+    // vga_clear(); 
     vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_RED);
     
     

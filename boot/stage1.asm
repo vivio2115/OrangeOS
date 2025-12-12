@@ -47,11 +47,13 @@ disk_load_lba:
     push si          
     push bx            
     
+    cli            
     mov ah, 0x41       
     mov bx, 0x55AA
     int 0x13
     jc .try_chs        
     cmp bx, 0xAA55
+    jne .try_chs
 
     pop bx            
     pop si            
@@ -92,6 +94,8 @@ disk_load_lba:
     pop si       
     pop dx           
     popa
+    clc
+    sti        
     ret
 
 .try_chs:
@@ -117,9 +121,12 @@ disk_load_lba:
     jne .disk_error
     
     popa
+    clc
+    sti           
     ret
 
 .disk_error:
+    sti                
     mov si, msg_disk_error
     call print_string
     jmp $         

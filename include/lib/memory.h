@@ -15,5 +15,6 @@ int strcmp(const char* s1, const char* s2);
 char* strcpy(char* dest, const char* src);
 char* strncpy(char* dest, const char* src, size_t n);
 char* itoa(int value, char* str, int base);
+int atoi(const char* str);
 
 #endif 

@@ -2,13 +2,21 @@
 
 [![OrangeOS Build](https://github.com/vivio2115/OrangeOS/actions/workflows/main.yml/badge.svg)](https://github.com/vivio2115/OrangeOS/actions/workflows/main.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![Version: 1.0](https://img.shields.io/badge/Version:-1.1-orange)
+![Version: 1.2](https://img.shields.io/badge/Version:-1.2-orange)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/vivio2115/OrangeOS)
 
+
+
+# THIS IS NOT WORKING VERSION
+## ITS JUST A DEV DEMO
 
 A small x86 operating system written in Assembly and C++.
 
 > **Fun fact:** The name comes from my orange cat!
+
+## Project website
+
+https://www.orangeos.tech
 
 ## Features
 

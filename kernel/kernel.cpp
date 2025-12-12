@@ -9,7 +9,12 @@
 #include <drivers/timer.h>
 #include <drivers/ata.h>
 #include <drivers/fat32.h>
+#include <drivers/speaker.h>
 #include <kernel/shell.h>
+#include <kernel/tss.h>
+#include <kernel/syscall.h>
+#include <kernel/process.h>
+#include <kernel/scheduler.h>
 
 
 extern "C" void kernel_main() {
@@ -62,6 +67,14 @@ extern "C" void kernel_main() {
         all_ok = false;
     }
     
+    uint32_t kernel_stack = (uint32_t)kmalloc(4096) + 4096;
+    tss_init(kernel_stack);
+    
+    syscall_init();
+    
+    process_init();
+    scheduler_init();
+    
     all_ok &= timer_init(100);
     
     asm volatile("sti");
@@ -94,12 +107,38 @@ extern "C" void kernel_main() {
     vga_writeln(" OK");
     vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
     
+    vga_write("[*] Initializing TSS...");
+    vga_set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
+    vga_writeln(" OK");
+    vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    
+    vga_write("[*] Initializing system calls...");
+    vga_set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
+    vga_writeln(" OK");
+    vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    
+    vga_write("[*] Initializing process manager...");
+    vga_set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
+    vga_writeln(" OK");
+    vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    
+    vga_write("[*] Initializing scheduler...");
+    vga_set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
+    vga_writeln(" OK");
+    vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    
     vga_write("[*] Initializing timer...");
     vga_set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
     vga_writeln(" OK");
     vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
     
     vga_write("[*] Enabling interrupts...");
+    vga_set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
+    vga_writeln(" OK");
+    vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    
+    vga_write("[*] Initializing PC speaker...");
+    Speaker::init();
     vga_set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
     vga_writeln(" OK");
     vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
@@ -142,19 +181,26 @@ extern "C" void kernel_main() {
     vga_writeln("System initialized successfully!");
     vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
     vga_writeln("");
+
+    Speaker::beep_startup();
     
-    timer_sleep(2000);
+    timer_sleep(100);
     
     vga_clear();
     vga_set_cursor(0, 0);
+
+    // process_load_elf("init.elf");
     
     vga_set_color(VGA_COLOR_ORANGE, VGA_COLOR_BLACK);
     vga_writeln("Welcome to " OS_NAME);
     vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
     vga_writeln(OS_FULL_INFO);
     vga_writeln("Type 'help' for available commands.");
-    vga_writeln("");
+    vga_writeln(" ");
     shell_init();
+
+    scheduler_start();
+    
     shell_run();
     
     while (1) {

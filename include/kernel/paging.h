@@ -83,10 +83,13 @@ void pfa_mark_used(uint32_t frame_start, uint32_t frame_count);
 
 void paging_init();
 void* paging_create_page_directory();
-void paging_map_page(void* virtual_addr, void* physical_addr, uint32_t flags);
+void* paging_clone_kernel_mappings();
+void paging_switch_directory(void* page_directory);
+void paging_map_page(void* virtual_addr, void* physical_addr, uint32_t flags, bool mark_as_used = true);
+void paging_map_page_in_directory(void* page_directory, void* virtual_addr, void* physical_addr, uint32_t flags, bool mark_as_used = true);
 void paging_unmap_page(void* virtual_addr);
 void* paging_get_physical_address(void* virtual_addr);
-void paging_identity_map(void* addr, uint32_t size, uint32_t flags);
+void paging_identity_map(void* addr, uint32_t size, uint32_t flags, bool mark_as_used = true);
 
 
 #ifdef __cplusplus

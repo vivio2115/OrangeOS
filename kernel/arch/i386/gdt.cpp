@@ -1,6 +1,6 @@
 #include <kernel/gdt.h>
 
-struct gdt_entry gdt_entries[5];
+struct gdt_entry gdt_entries[6];
 struct gdt_ptr gdt_pointer;
 
 void gdt_set_gate(int num, uint32_t base, uint32_t limit, uint8_t access, uint8_t gran) {
@@ -16,19 +16,15 @@ void gdt_set_gate(int num, uint32_t base, uint32_t limit, uint8_t access, uint8_
 }
 
 bool gdt_init() {
-    gdt_pointer.limit = (sizeof(struct gdt_entry) * 5) - 1;
+    gdt_pointer.limit = (sizeof(struct gdt_entry) * 6) - 1;
     gdt_pointer.base = (uint32_t)&gdt_entries;
 
     gdt_set_gate(0, 0, 0, 0, 0);
-
-    gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
-
-    gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
-
-    gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF);
-
-    gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
-
+    gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); 
+    gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF); 
+    gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); 
+    gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); 
+    
     gdt_flush((uint32_t)&gdt_pointer);
     
     return true;

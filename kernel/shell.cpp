@@ -8,7 +8,9 @@
 #include <drivers/keyboard.h>
 #include <drivers/timer.h>
 #include <drivers/fat32.h>
+#include <drivers/speaker.h>
 #include <lib/memory.h>
+#include <kernel/process.h>
 
 static char input_buffer[SHELL_BUFFER_SIZE];
 static int buffer_pos = 0;
@@ -44,6 +46,7 @@ void cmd_help(const char* args) {
         vga_writeln("  fat32debug - Debug FAT32 file system");
         vga_writeln("  paginginfo - Show paging statistics");
         vga_writeln("  load       - Load file to memory");
+        vga_writeln("  music      - Play Super Mario melody");
     } else {
         vga_writeln("Available commands:");
         vga_writeln("  help     - Show this help message");
@@ -59,6 +62,9 @@ void cmd_help(const char* args) {
         vga_writeln("  cd       - Change directory");
         vga_writeln("  pwd      - Print working directory");
         vga_writeln("  rm       - Delete file");
+        vga_writeln("  run      - Run userspace program");
+        vga_writeln("  beep     - Play a beep sound");
+        vga_writeln("  beeper   - Play error/success sound");
         vga_writeln("  reboot   - Reboot the system");
         vga_writeln("  halt     - Halt the system");
         vga_writeln("");
@@ -264,6 +270,71 @@ void cmd_halt() {
 }
 
 
+void cmd_beep(const char* args) {
+    if (args == NULL || strlen(args) == 0) {
+        
+        Speaker::beep(1000, 200);
+    } else {
+        
+        
+        char freq_str[16] = {0};
+        char dur_str[16] = {0};
+        int i = 0, j = 0;
+        
+        
+        while (args[i] && args[i] != ' ' && i < 15) {
+            freq_str[j++] = args[i++];
+        }
+        freq_str[j] = '\0';
+        
+        
+        while (args[i] && args[i] == ' ') i++;
+        
+        
+        j = 0;
+        while (args[i] && args[i] != ' ' && i < 31 && j < 15) {
+            dur_str[j++] = args[i++];
+        }
+        dur_str[j] = '\0';
+        
+        uint32_t frequency = (uint32_t)atoi(freq_str);
+        uint32_t duration = (dur_str[0] != '\0') ? (uint32_t)atoi(dur_str) : 200;
+        
+        if (frequency < 20 || frequency > 20000) {
+            vga_writeln("Frequency must be between 20 and 20000 Hz");
+            return;
+        }
+        
+        Speaker::beep(frequency, duration);
+    }
+}
+
+
+void cmd_beeper(const char* args) {
+    if (args == NULL || strlen(args) == 0) {
+        vga_writeln("Usage: beeper <error|success|startup>");
+        return;
+    }
+    
+    if (strcmp(args, "error") == 0) {
+        Speaker::beep_error();
+    } else if (strcmp(args, "success") == 0) {
+        Speaker::beep_success();
+    } else if (strcmp(args, "startup") == 0) {
+        Speaker::beep_startup();
+    } else {
+        vga_writeln("Unknown sound effect. Available: error, success, startup");
+    }
+}
+
+
+void cmd_music() {
+    vga_writeln("Playing Super Mario Bros theme...");
+    Speaker::play_melody();
+    vga_writeln("Done!");
+}
+
+
 void cmd_ls(const char* args) {
     if (args == NULL || strlen(args) == 0) {
         fat32_list_directory("/");
@@ -280,15 +351,25 @@ void cmd_cat(const char* args) {
     }
     
     
-    void* buffer = kmalloc(65536);
+    uint32_t file_size = fat32_get_file_size(args);
+    
+    
+    void* buffer = kmalloc(file_size + 1);
     if (buffer == NULL) {
         vga_writeln("Error: Could not allocate memory for file");
         return;
     }
     
-    if (fat32_read_file(args, buffer, 65536)) {
-        
+    
+    memset(buffer, 0, file_size + 1);
+    
+    
+    if (fat32_read_file(args, buffer, file_size)) {
         char* file_content = (char*)buffer;
+        
+        
+        file_content[file_size] = '\0';
+        
         vga_writeln(file_content);
     } else {
         vga_write("Error: Could not read file '");
@@ -355,6 +436,10 @@ void cmd_vi(const char* args) {
     
     editor_open(args);
     editor_run();
+    
+    
+    vga_clear();
+    vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
 }
 
 
@@ -423,6 +508,18 @@ void cmd_rm(const char* args) {
         vga_write("Error: Failed to delete file '");
         vga_write(args);
         vga_writeln("'");
+    }
+}
+
+
+void cmd_run(const char* args) {
+    if (args == NULL || strlen(args) == 0) {
+        vga_writeln("Usage: run <filename>");
+        return;
+    }
+
+    if (!process_load_elf(args)) {
+        vga_writeln("Failed to load process!");
     }
 }
 
@@ -575,69 +672,87 @@ void cmd_time() {
 }
 
 
+int my_strcmp(const char* s1, const char* s2) {
+    while (*s1 && (*s1 == *s2)) {
+        s1++;
+        s2++;
+    }
+    return *(const unsigned char*)s1 - *(const unsigned char*)s2;
+}
+
 void shell_execute(const char* command) {
     
-    while (*command == ' ') command++;
+    while (*command && (unsigned char)*command <= 32) {
+        command++;
+    }
     
     if (strlen(command) == 0) {
         return; 
     }
 
-    
     char cmd[32];
     const char* args = command;
     int i = 0;
-    
-    
-    while (*args && *args != ' ' && i < 31) {
-        cmd[i++] = *args++;
-    }
-    cmd[i] = '\0';
-    
-    
-    while (*args == ' ') args++;
 
     
-    if (strcmp(cmd, "help") == 0) {
+    
+    while (*args && (unsigned char)*args > 32 && i < 31) {
+        cmd[i++] = *args++;
+    }
+    cmd[i] = '\0'; 
+    
+    
+    while (*args && (unsigned char)*args <= 32) args++;
+
+    
+    if (my_strcmp(cmd, "help") == 0) {
         cmd_help(args);
-    } else if (strcmp(cmd, "clear") == 0) {
+    } else if (my_strcmp(cmd, "clear") == 0) {
         cmd_clear();
-    } else if (strcmp(cmd, "echo") == 0) {
+    } else if (my_strcmp(cmd, "echo") == 0) {
         cmd_echo(args);
-    } else if (strcmp(cmd, "info") == 0) {
+    } else if (my_strcmp(cmd, "info") == 0) {
         cmd_info();
-    } else if (strcmp(cmd, "testheap") == 0) {
+    } else if (my_strcmp(cmd, "testheap") == 0) {
         cmd_testheap();
-    } else if (strcmp(cmd, "meminfo") == 0) {
+    } else if (my_strcmp(cmd, "meminfo") == 0) {
         cmd_meminfo();
-    } else if (strcmp(cmd, "time") == 0) {
+    } else if (my_strcmp(cmd, "time") == 0) {
         cmd_time();
-    } else if (strcmp(cmd, "reboot") == 0) {
+    } else if (my_strcmp(cmd, "reboot") == 0) {
         cmd_reboot();
-    } else if (strcmp(cmd, "halt") == 0) {
+    } else if (my_strcmp(cmd, "halt") == 0) {
         cmd_halt();
-    } else if (strcmp(cmd, "ls") == 0) {
+    } else if (my_strcmp(cmd, "ls") == 0) {
         cmd_ls(args);
-    } else if (strcmp(cmd, "cat") == 0) {
+    } else if (my_strcmp(cmd, "cat") == 0) {
         cmd_cat(args);
-    } else if (strcmp(cmd, "load") == 0) {
+    } else if (my_strcmp(cmd, "load") == 0) {
         cmd_load(args);
-    } else if (strcmp(cmd, "vi") == 0) {
+    } else if (my_strcmp(cmd, "vi") == 0) {
         cmd_vi(args);
-    } else if (strcmp(cmd, "fat32debug") == 0) {
+    } else if (my_strcmp(cmd, "fat32debug") == 0) {
         fat32_debug();
-    } else if (strcmp(cmd, "mkdir") == 0) {
+    } else if (my_strcmp(cmd, "mkdir") == 0) {
         cmd_mkdir(args);
-    } else if (strcmp(cmd, "cd") == 0) {
+    } else if (my_strcmp(cmd, "cd") == 0) {
         cmd_cd(args);
-    } else if (strcmp(cmd, "pwd") == 0) {
+    } else if (my_strcmp(cmd, "pwd") == 0) {
         cmd_pwd();
-    } else if (strcmp(cmd, "rm") == 0) {
+    } else if (my_strcmp(cmd, "rm") == 0) {
         cmd_rm(args);
-    } else if (strcmp(cmd, "paginginfo") == 0) {
+    } else if (my_strcmp(cmd, "beep") == 0) {
+        cmd_beep(args);
+    } else if (my_strcmp(cmd, "beeper") == 0) {
+        cmd_beeper(args);
+    } else if (my_strcmp(cmd, "music") == 0) {
+        cmd_music();
+    } else if (my_strcmp(cmd, "paginginfo") == 0) {
         cmd_paginginfo();
-    } else if (strcmp(cmd, "testpaging") == 0) {
+    } else if (my_strcmp(cmd, "testpaging") == 0) {
         cmd_testpaging();
+    } else if (my_strcmp(cmd, "run") == 0) {
+        cmd_run(args);
     } else {
         vga_write("Unknown command: ");
         vga_writeln(cmd);
@@ -652,7 +767,7 @@ void shell_run() {
     while (true) {
         char c = keyboard_getchar();
         
-        if (c == '\n') {
+        if (c == '\n' || c == '\r') {
             
             vga_putchar('\n');
             input_buffer[buffer_pos] = '\0';
@@ -671,10 +786,11 @@ void shell_run() {
                 input_buffer[buffer_pos] = '\0';
                 vga_putchar('\b');
             }
-        } else if (buffer_pos < SHELL_BUFFER_SIZE - 1) {
+        } else if (c >= 32 && c < 127 && buffer_pos < SHELL_BUFFER_SIZE - 1) {
             
             input_buffer[buffer_pos++] = c;
             vga_putchar(c);
         }
+        
     }
 }

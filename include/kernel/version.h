@@ -2,7 +2,7 @@
 #define VERSION_H
 
 #define OS_NAME "OrangeOS"
-#define OS_VERSION "1.1"
+#define OS_VERSION "1.2"
 
 #include "version_build.h"
 

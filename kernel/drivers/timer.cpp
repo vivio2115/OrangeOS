@@ -1,6 +1,7 @@
 
 #include <drivers/timer.h>
 #include <kernel/idt.h>
+#include <kernel/scheduler.h>
 
 
 static uint32_t timer_ticks = 0;
@@ -36,7 +37,7 @@ extern "C" void timer_handler() {
     timer_ticks++;
     
     
-    outb(0x20, 0x20);
+    scheduler_schedule();
 }
 
 

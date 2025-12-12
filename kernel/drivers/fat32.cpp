@@ -695,6 +695,7 @@ bool fat32_read_file(const char* filename, void* buffer, size_t max_size) {
         }
         
         if (!ata_read_sectors(cluster_lba, boot_sector->sectors_per_cluster, cluster_buffer)) {
+            vga_writeln("FAT32: Error reading sectors");
             kfree(cluster_buffer);
             kfree(entry);
             return false;
